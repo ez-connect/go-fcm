@@ -12,7 +12,7 @@ func TestGetDeviceInfo(t *testing.T) {
 
 func TestSubscribeToTopic(t *testing.T) {
 	client := NewClient("sever-key")
-	err := client.SubscribeToTopic([]string{"device-token"}, "test-topic-name")
+	err := client.SubscribeToTopic([]string{"device-token"}, "/topics/test-topic-name")
 	if err != nil {
 		t.Error(err)
 	}
@@ -56,7 +56,7 @@ func TestSendMessage(t *testing.T) {
 
 func TestUnsubscribeToTopic(t *testing.T) {
 	client := NewClient("server-key")
-	err := client.UnsubscribeFromTopic([]string{"device-token"}, "test-topic")
+	err := client.UnsubscribeFromTopic([]string{"device-token"}, "/topics/test-topic")
 	if err != nil {
 		t.Error(err)
 	}

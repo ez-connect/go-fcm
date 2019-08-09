@@ -1,6 +1,7 @@
 package fcm
 
 // Downstream HTTP messages (JSON)
+//
 // https://firebase.google.com/docs/cloud-messaging/http-server-ref#downstream-http-messages-json
 type Message struct {
 	// Targets
@@ -40,7 +41,8 @@ type Notification struct {
 	Color            string `json:"color,omitempty"`
 }
 
-// Downstream HTTP message response body (JSON)
+// Downstream HTTP message response body (JSON).
+// Include topic message HTTP response body.
 type MessageResponse struct {
 	// Message
 	MulticastId int64                   `bson:"multicast_id,omitempty" json:"multicast_id,omitempty"`
