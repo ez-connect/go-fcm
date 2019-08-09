@@ -1,21 +1,54 @@
 package fcm
 
-import "errors"
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
+)
 
-// POST https://fcm.googleapis.com/v1/{parent=projects/*}/messages:send
-const API_MESSAGE = "https://fcm.googleapis.com/v1/projects/%s/messages:send"
+const API_APP_INSTANCE = "https://iid.googleapis.com/iid/info/%s?details=true"
+const API_SEND_MESSAGE = "https://fcm.googleapis.com/fcm/send"
+const API_TOPIC_SUBSCRIBE = "https://iid.googleapis.com/iid/v1/%s/rel/topics/%s"
+const API_TOPIC_BATCH_ADD = "https://iid.googleapis.com/iid/v1:batchAdd"
+const API_TOPIC_BATCH_REMOVE = "https://iid.googleapis.com/iid/v1:batchRemove"
+
+func NewClient(serverKey string) *Client {
+	client := &Client{
+		ServerKey: serverKey,
+	}
+
+	return client
+}
 
 type Client struct {
+	// APIKey    string
 	ServerKey string
 }
 
-func (c *Client) New(serverKey string) error {
-	if serverKey != "" {
-		c.ServerKey = serverKey
-		return nil
+// Get information about app instances
+// https://developers.google.com/instance-id/reference/server#create_a_relation_mapping_for_an_app_instance
+func (c *Client) GetDeviceInfo(token string) (*DeviceInfoResponse, error) {
+	endpoint := fmt.Sprintf(API_APP_INSTANCE, token)
+	resp, err := c.request(http.MethodGet, endpoint, nil)
+	defer resp.Body.Close()
+	if err != nil {
+		return nil, err
 	}
 
-	return errors.New("Missing `serverKey`")
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.New(resp.Status)
+	}
+
+	result := DeviceInfoResponse{}
+	// If you have an io.Reader, use Decoder. Otherwise use Unmarshal.
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // Send sends a Message to Firebase Cloud Messaging.
@@ -23,18 +56,87 @@ func (c *Client) New(serverKey string) error {
 // The Message must specify exactly one of Token, Topic and Condition fields.
 // FCM will customize the message for each target platform based on the arguments
 // specified in the Message.
-func (c *Client) Send(message Message) (*Response, error) {
-	return nil, nil
+// Use Legacy HTTP Server Protocol
+// https://firebase.google.com/docs/cloud-messaging/http-server-ref
+func (c *Client) Send(message Message) (*MessageResponse, error) {
+	body, err := json.Marshal(&message)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := c.request(http.MethodPost, API_SEND_MESSAGE, body)
+	defer resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.New(resp.Status)
+	}
+
+	result := MessageResponse{}
+	// If you have an io.Reader, use Decoder. Otherwise use Unmarshal.
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
 }
 
 // SubscribeToTopic subscribes a list of registration tokens to a topic.
 // The tokens list must not be empty, and have at most 1000 tokens.
-func (c *Client) SubscribeToTopic(tokens []string, topic string) (*TopicManagementResponse, error) {
-	return nil, nil
+func (c *Client) SubscribeToTopic(tokens []string, topic string) error {
+	return c.subscribe(API_TOPIC_BATCH_ADD, tokens, topic)
 }
 
 // UnsubscribeFromTopic unsubscribes a list of registration tokens from a topic.
 // The tokens list must not be empty, and have at most 1000 tokens.
-func (c *Client) UnsubscribeFromTopic(tokens []string, topic string) (*TopicManagementResponse, error) {
-	return nil, nil
+func (c *Client) UnsubscribeFromTopic(tokens []string, topic string) error {
+	return c.subscribe(API_TOPIC_BATCH_REMOVE, tokens, topic)
+}
+
+///////////////////////////////////////////////////////////////////
+
+func (c *Client) request(method string, endpoint string, body []byte) (*http.Response, error) {
+	var req *http.Request
+	var resp *http.Response
+	var err error
+
+	req, err = http.NewRequest(method, endpoint, bytes.NewBuffer(body))
+	if err == nil {
+		// Add headers
+		req.Header.Add("Authorization", fmt.Sprintf("key=%s", c.ServerKey))
+		req.Header.Add("Content-Type", "application/json")
+
+		// Execute
+		client := &http.Client{}
+		resp, err = client.Do(req)
+	}
+
+	return resp, err
+}
+
+func (c *Client) subscribe(endpoint string, tokens []string, topic string) error {
+	data := TopicSubscribe{
+		RegistrationTokens: tokens,
+		To:                 fmt.Sprintf("/topics/%s", topic),
+	}
+
+	body, err := json.Marshal(&data)
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.request(http.MethodPost, endpoint, body)
+	defer resp.Body.Close()
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return errors.New(resp.Status)
+	}
+
+	return nil
 }
