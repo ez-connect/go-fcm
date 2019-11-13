@@ -10,8 +10,9 @@ import (
 	"net/http"
 )
 
-func NewClient(serverKey string) *Client {
+func NewClient(apiKey, serverKey string) *Client {
 	client := &Client{
+		ApiKey:    apiKey,
 		ServerKey: serverKey,
 	}
 
@@ -19,6 +20,8 @@ func NewClient(serverKey string) *Client {
 }
 
 type Client struct {
+	// API key
+	ApiKey string
 	// Server key
 	// Firebase console > Project Settings > Cloud Messaging > Server key
 	ServerKey string
@@ -55,7 +58,7 @@ func (c *Client) GetDeviceInfo(token string) (*DeviceInfoResponse, error) {
 // https://firebase.google.com/docs/reference/rest/auth
 func (c *Client) GetUser(token string) (*User, error) {
 	const API_USER_LOOKUP = "https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=%s"
-	endpoint := fmt.Sprintf(API_USER_LOOKUP, c.ServerKey)
+	endpoint := fmt.Sprintf(API_USER_LOOKUP, c.ApiKey)
 	params := map[string]string{
 		"idToken": token,
 	}
