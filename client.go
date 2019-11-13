@@ -50,6 +50,36 @@ func (c *Client) GetDeviceInfo(token string) (*DeviceInfoResponse, error) {
 	return &result, nil
 }
 
+// Get user info
+//
+// https://firebase.google.com/docs/reference/rest/auth
+func (c *Client) GetUser(token string) (*User, error) {
+	const API_USER_LOOKUP = "https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=%s"
+	endpoint := fmt.Sprintf(API_USER_LOOKUP, c.ServerKey)
+	params := map[string]string{
+		"idToken": token,
+	}
+	body, _ := json.Marshal(params)
+	resp, err := c.request(http.MethodPost, endpoint, body)
+	defer resp.Body.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, errors.New(resp.Status)
+	}
+
+	result := LookupUserResponse{}
+	// If you have an io.Reader, use Decoder. Otherwise use Unmarshal.
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	if err != nil && len(result.Users) == 0 {
+		return nil, err
+	}
+
+	return &result.Users[0], nil
+}
+
 // Send sends a Message to Firebase Cloud Messaging.
 //
 // The Message must specify exactly one of Token, Topic and Condition fields.

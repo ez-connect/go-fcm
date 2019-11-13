@@ -2,16 +2,26 @@ package fcm
 
 import "testing"
 
+const SERVER_KEY = "AIzaSyB2L0KWNpY8BUdML-kkAoLxgvWuhRgvPNA"
+
 func TestGetDeviceInfo(t *testing.T) {
-	client := NewClient("sever-key")
+	client := NewClient(SERVER_KEY)
 	_, err := client.GetDeviceInfo("device-token")
 	if err != nil {
 		t.Error(err)
 	}
 }
 
+func TestGetUser(t *testing.T) {
+	client := NewClient(SERVER_KEY)
+	resp, err := client.GetUser("eyJhbGciOiJSUzI1NiIsImtpZCI6IjI1MDgxMWNkYzYwOWQ5MGY5ODE1MTE5MWIyYmM5YmQwY2ViOWMwMDQiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vZm1zdHlsZS1hcHAiLCJhdWQiOiJmbXN0eWxlLWFwcCIsImF1dGhfdGltZSI6MTU3MzYyNjM1MywidXNlcl9pZCI6IjNjZnc5RmR2eUtjUjNFSG00VnVNUEdFSlRMajEiLCJzdWIiOiIzY2Z3OUZkdnlLY1IzRUhtNFZ1TVBHRUpUTGoxIiwiaWF0IjoxNTczNjI2MzUzLCJleHAiOjE1NzM2Mjk5NTMsInBob25lX251bWJlciI6Iis4NDkwNjUxNjU3OCIsImZpcmViYXNlIjp7ImlkZW50aXRpZXMiOnsicGhvbmUiOlsiKzg0OTA2NTE2NTc4Il19LCJzaWduX2luX3Byb3ZpZGVyIjoicGhvbmUifX0.I2Jiu8_Iato2WQLa0F5AcNdOgDnHBUonwJkhC2oIvR97JQGt2uougOIIODi6ur3h4VHpUiYvfaBXscmxui9H6ayCa-Hoqv_syXQc948uO9Ktk1AQpcPm5IfkHWKrRAlOZMYWXQw7pOqQHZpkzqqJrNhLvsyzA243fHeBQ3zMy6xs-ls0drLTy0ZTYZv7vVzfCecAQbAV3I9L8yquQqk0uRBAPO1gnE5Z1nmwiDc4c801B9_6f2v_0O_6S8FNCNiBpNBcsxNRjkkCm5Xr99lyDytmUahyl45TGrMJNOYRw0EMDdnvIUmSaUdyaOspNyJiPqJn8R7sciLXHfELQFBFeQ")
+	if err != nil {
+		t.Error(err)
+	}
+}
+
 func TestSubscribeToTopic(t *testing.T) {
-	client := NewClient("sever-key")
+	client := NewClient(SERVER_KEY)
 	err := client.SubscribeToTopic([]string{"device-token"}, "/topics/test-topic-name")
 	if err != nil {
 		t.Error(err)
@@ -46,7 +56,7 @@ func TestSendMessage(t *testing.T) {
 		},
 	}
 
-	client := NewClient("server-key")
+	client := NewClient(SERVER_KEY)
 	for _, v := range messages {
 		if _, err := client.Send(v); err != nil {
 			t.Error(err)
@@ -55,7 +65,7 @@ func TestSendMessage(t *testing.T) {
 }
 
 func TestUnsubscribeToTopic(t *testing.T) {
-	client := NewClient("server-key")
+	client := NewClient(SERVER_KEY)
 	err := client.UnsubscribeFromTopic([]string{"device-token"}, "/topics/test-topic")
 	if err != nil {
 		t.Error(err)
