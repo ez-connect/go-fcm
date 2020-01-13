@@ -11,6 +11,15 @@ type User struct {
 	Disabled      string `json:"disabled,omitempty"`
 	LastLoginAt   string `json:"lastLoginAt,omitempty"`
 	CreatedAt     string `json:"createdAt,omitempty"`
+
+	ProviderUserInfo []ProviderInfo `json:"providerUserInfo,omitempty"`
+}
+
+type ProviderInfo struct {
+	ProviderId  string `json:"providerId,omitempty"`
+	DisplayName string `json:"displayName,omitempty"`
+	PhotoUrl    string `json:"photoUrl,omitempty"`
+	Email       string `json:"email,omitempty"`
 }
 
 type LookupUserResponse struct {
