@@ -1,3 +1,7 @@
+### DEPRECATED - no longer actively maintained
+
+---
+
 # Firebase Cloud Messaging
 
 Golang client library for Firebase Cloud Messaging.
